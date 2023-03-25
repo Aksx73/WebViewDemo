@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.KeyEvent
 import android.view.View
 import android.webkit.*
 import androidx.appcompat.app.AppCompatActivity
@@ -72,7 +73,6 @@ class MainActivity : AppCompatActivity(){
 
 
     inner class MyWebViewChromeClient : WebChromeClient() {
-        //todo
 
         override fun onProgressChanged(view: WebView, progress: Int) {
             binding.progressBar.setProgressCompat(progress, true)
@@ -187,6 +187,22 @@ class MainActivity : AppCompatActivity(){
                 }, *perms)
             return true
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_BACK -> {
+                    if (binding.webview.canGoBack()) {
+                        binding.webview.goBack()
+                    } else {
+                        finish()
+                    }
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {

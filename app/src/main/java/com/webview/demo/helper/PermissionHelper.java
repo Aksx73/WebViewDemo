@@ -88,12 +88,7 @@ public class PermissionHelper {
                             permissionToken.continuePermissionRequest();
                         }
                     })
-                    .withErrorListener(new PermissionRequestErrorListener() {
-                        @Override
-                        public void onError(DexterError error) {
-                            Log.e("Dexter", "There was an error: " + error.toString());
-                        }
-                    })
+                    .withErrorListener(error -> Log.e("Dexter", "There was an error: " + error.toString()))
                     .check();
 
          /*   AndPermission.with(context)
