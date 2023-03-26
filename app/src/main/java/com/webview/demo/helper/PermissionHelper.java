@@ -1,22 +1,26 @@
 package com.webview.demo.helper;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
 
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.MultiplePermissionsReport;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.DexterError;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.PermissionRequestErrorListener;
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.permissionx.guolindev.PermissionX;
+import com.permissionx.guolindev.callback.ExplainReasonCallback;
+import com.permissionx.guolindev.callback.ForwardToSettingsCallback;
+import com.permissionx.guolindev.callback.RequestCallback;
+import com.permissionx.guolindev.request.ExplainScope;
+import com.permissionx.guolindev.request.ForwardScope;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by wuzongheng on 2016/11/5.
@@ -60,37 +64,6 @@ public class PermissionHelper {
             }
         } else {
 
-            Dexter.withContext(context)
-                    .withPermissions(permissionName)
-                    .withListener(new MultiplePermissionsListener() {
-                        @Override
-                        public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
-                            if (multiplePermissionsReport != null) {
-                                if (multiplePermissionsReport.areAllPermissionsGranted()) {
-                                    if (checkPermissionListener != null) {
-                                        checkPermissionListener.onAllGranted(false);
-                                    }
-                                } else {
-                                    List<PermissionDeniedResponse> deniedPermissions = multiplePermissionsReport.getDeniedPermissionResponses();
-                                    ArrayList<String> permissions = null;
-                                    for (int i = 0; i < deniedPermissions.size(); i++) {
-                                        permissions.add(deniedPermissions.get(i).getPermissionName());
-                                    }
-                                    if (checkPermissionListener != null) {
-                                        checkPermissionListener.onPartlyGranted(permissions, false);
-                                    }
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
-                            permissionToken.continuePermissionRequest();
-                        }
-                    })
-                    .withErrorListener(error -> Log.e("Dexter", "There was an error: " + error.toString()))
-                    .check();
-
          /*   AndPermission.with(context)
                     .runtime()
                     .permission(permissionName)
@@ -110,8 +83,31 @@ public class PermissionHelper {
                             }
                         }
                     })
-                    .start();*/
+                    .start();
+                    */
 
+            PermissionX.init((FragmentActivity) context)
+                    .permissions(permissionName)
+                    .onExplainRequestReason((scope, deniedList) -> {
+                        scope.showRequestReasonDialog(deniedList, "Core fundamental are based on these permissions", "OK", "Cancel");
+                    })
+                    .onForwardToSettings((scope, deniedList) -> {
+                        scope.showForwardToSettingsDialog(deniedList, "You need to allow necessary permissions in Settings manually", "OK", "Cancel");
+                    })
+                    .request((allGranted, grantedList, deniedList) -> {
+                        if (allGranted) {
+                            if (checkPermissionListener != null) {
+                                checkPermissionListener.onAllGranted(false);
+                            }
+                        }
+                        else {
+                            if (checkPermissionListener != null) {
+                                checkPermissionListener.onPartlyGranted(deniedList, false);
+                            }
+                        }
+                    });
+
+            //todo ISSUE: dialog on permission denial not shown
 
         }
     }

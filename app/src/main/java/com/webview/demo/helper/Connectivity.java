@@ -23,6 +23,7 @@ import java.util.Locale;
  */
 public class Connectivity {
 
+
     /**
      * Get the network info
 

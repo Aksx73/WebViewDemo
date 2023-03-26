@@ -2,12 +2,13 @@ package com.webview.demo
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.net.*
+import android.net.ConnectivityManager.NetworkCallback
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.view.KeyEvent
 import android.view.View
 import android.webkit.*
 import androidx.appcompat.app.AppCompatActivity
@@ -40,7 +41,6 @@ class MainActivity : AppCompatActivity(){
     private var filePickerFilePath: ValueCallback<Array<Uri>>? = null
     private var filePickerCamMessage: String? = null
     private var FILE_TYPE = "*/*"
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -189,22 +189,6 @@ class MainActivity : AppCompatActivity(){
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_BACK -> {
-                    if (binding.webview.canGoBack()) {
-                        binding.webview.goBack()
-                    } else {
-                        finish()
-                    }
-                    return true
-                }
-            }
-        }
-        return super.onKeyDown(keyCode, event)
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         super.onActivityResult(requestCode, resultCode, intent)
         var results: Array<Uri>? = null
@@ -268,9 +252,9 @@ class MainActivity : AppCompatActivity(){
     fun parsePermission(resource: Array<String>): Array<String?> {
         val permissions: MutableList<String> = ArrayList()
         for (res in resource) {
-            if (res == PermissionRequest.RESOURCE_AUDIO_CAPTURE) {
+            /*if (res == PermissionRequest.RESOURCE_AUDIO_CAPTURE) {
                 permissions.add(Manifest.permission.RECORD_AUDIO)
-            }
+            }*/
             if (res == PermissionRequest.RESOURCE_VIDEO_CAPTURE) {
                 permissions.add(Manifest.permission.CAMERA)
             }
@@ -281,6 +265,7 @@ class MainActivity : AppCompatActivity(){
         }
         return result
     }
+
 
     override fun onResume() {
         super.onResume()
