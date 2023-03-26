@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.*
 import android.net.ConnectivityManager.NetworkCallback
 import android.os.Bundle
@@ -71,6 +72,31 @@ class MainActivity : AppCompatActivity(){
 
     }
 
+ /*   inner class MyWebViewClient : WebViewClient(){
+        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+            super.onPageStarted(view, url, favicon)
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+        }
+
+        override fun shouldOverrideUrlLoading(
+            view: WebView?,
+            request: WebResourceRequest?
+        ): Boolean {
+            return super.shouldOverrideUrlLoading(view, request)
+        }
+
+        override fun onLoadResource(view: WebView?, url: String?) {
+            super.onLoadResource(view, url)
+        }
+
+        override fun onPageCommitVisible(view: WebView?, url: String?) {
+            super.onPageCommitVisible(view, url)
+        }
+
+    }*/
 
     inner class MyWebViewChromeClient : WebChromeClient() {
 
@@ -247,6 +273,8 @@ class MainActivity : AppCompatActivity(){
         val sd_directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         return File.createTempFile(new_name, if (isVideo) ".mp4" else ".jpg", sd_directory)
     }
+
+
 
 
     fun parsePermission(resource: Array<String>): Array<String?> {
