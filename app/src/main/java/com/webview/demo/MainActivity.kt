@@ -2,16 +2,15 @@ package com.webview.demo
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.*
-import android.net.ConnectivityManager.NetworkCallback
-import android.os.Bundle
-import android.os.Environment
+import android.os.*
 import android.provider.MediaStore
+import android.view.KeyEvent
 import android.view.View
 import android.webkit.*
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.google.android.material.snackbar.Snackbar
@@ -24,13 +23,16 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding : ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
+    private var doubleBackToExitPressedOnce = false
 
     companion object {
-        const val URL_MISSION_100 = "https://g05f99af21721c3-bjsdev.adb.ap-mumbai-1.oraclecloudapps.com/ords/r/prachar/mission-100"
-        const val URL_RWB = "https://g05f99af21721c3-bjsdev.adb.ap-mumbai-1.oraclecloudapps.com/ords/r/prachar/mission-100"
+        const val URL_MISSION_100 =
+            "https://g05f99af21721c3-bjsdev.adb.ap-mumbai-1.oraclecloudapps.com/ords/r/prachar/mission-100"
+        const val URL_RWB =
+            "https://g05f99af21721c3-bjsdev.adb.ap-mumbai-1.oraclecloudapps.com/ords/r/prachar/mission-100"
         const val FILE_PICKER_REQ_CODE = 19
     }
 
@@ -43,6 +45,28 @@ class MainActivity : AppCompatActivity(){
     private var filePickerCamMessage: String? = null
     private var FILE_TYPE = "*/*"
 
+    var permissions = arrayOf(
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.CAMERA
+    )
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    var permissions_33 = arrayOf(
+        Manifest.permission.READ_MEDIA_IMAGES,
+        Manifest.permission.READ_MEDIA_VIDEO,
+        Manifest.permission.CAMERA
+    )
+
+    fun storagePermissions(): Array<String> {
+        val p: Array<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions_33
+        } else {
+            permissions
+        }
+        return p
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -51,7 +75,7 @@ class MainActivity : AppCompatActivity(){
         initWebView()
     }
 
-    private fun initWebView(){
+    private fun initWebView() {
 
         binding.webview.settings.loadsImagesAutomatically = true
         binding.webview.settings.javaScriptEnabled = true
@@ -72,31 +96,31 @@ class MainActivity : AppCompatActivity(){
 
     }
 
- /*   inner class MyWebViewClient : WebViewClient(){
-        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-            super.onPageStarted(view, url, favicon)
-        }
+    /*   inner class MyWebViewClient : WebViewClient(){
+           override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+               super.onPageStarted(view, url, favicon)
+           }
 
-        override fun onPageFinished(view: WebView?, url: String?) {
-            super.onPageFinished(view, url)
-        }
+           override fun onPageFinished(view: WebView?, url: String?) {
+               super.onPageFinished(view, url)
+           }
 
-        override fun shouldOverrideUrlLoading(
-            view: WebView?,
-            request: WebResourceRequest?
-        ): Boolean {
-            return super.shouldOverrideUrlLoading(view, request)
-        }
+           override fun shouldOverrideUrlLoading(
+               view: WebView?,
+               request: WebResourceRequest?
+           ): Boolean {
+               return super.shouldOverrideUrlLoading(view, request)
+           }
 
-        override fun onLoadResource(view: WebView?, url: String?) {
-            super.onLoadResource(view, url)
-        }
+           override fun onLoadResource(view: WebView?, url: String?) {
+               super.onLoadResource(view, url)
+           }
 
-        override fun onPageCommitVisible(view: WebView?, url: String?) {
-            super.onPageCommitVisible(view, url)
-        }
+           override fun onPageCommitVisible(view: WebView?, url: String?) {
+               super.onPageCommitVisible(view, url)
+           }
 
-    }*/
+       }*/
 
     inner class MyWebViewChromeClient : WebChromeClient() {
 
@@ -109,9 +133,14 @@ class MainActivity : AppCompatActivity(){
             }
         }
 
-        override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback) {
-            PermissionHelper.CheckPermissions(this@MainActivity, object :
-                PermissionHelper.CheckPermissionListener {
+        override fun onGeolocationPermissionsShowPrompt(
+            origin: String?,
+            callback: GeolocationPermissions.Callback
+        ) {
+            PermissionHelper.CheckPermissions(
+                this@MainActivity,
+                object :
+                    PermissionHelper.CheckPermissionListener {
                     override fun onAllGranted(sync: Boolean) {
                         callback.invoke(origin, true, true)
                     }
@@ -119,18 +148,20 @@ class MainActivity : AppCompatActivity(){
                     override fun onPartlyGranted(permissionsDenied: List<String?>?, sync: Boolean) {
                         callback.invoke(origin, false, false)
                     }
-                }, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION
+                },
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
             )
         }
 
         override fun onPermissionRequest(request: PermissionRequest) {
             for (res in request.resources) {
-                if (res == PermissionRequest.RESOURCE_AUDIO_CAPTURE) {
-                    if (!webViewAudioEnabled) {
-                        request.deny()
-                        return
-                    }
-                }
+                /* if (res == PermissionRequest.RESOURCE_AUDIO_CAPTURE) {
+                     if (!webViewAudioEnabled) {
+                         request.deny()
+                         return
+                     }
+                 }*/
                 if (res == PermissionRequest.RESOURCE_VIDEO_CAPTURE) {
                     if (!webViewCameraEnabled) {
                         request.deny()
@@ -139,7 +170,8 @@ class MainActivity : AppCompatActivity(){
                 }
             }
 
-            PermissionHelper.CheckPermissions(this@MainActivity, object : PermissionHelper.CheckPermissionListener {
+            PermissionHelper.CheckPermissions(
+                this@MainActivity, object : PermissionHelper.CheckPermissionListener {
                     override fun onAllGranted(sync: Boolean) {
                         request.grant(request.resources)
                     }
@@ -153,7 +185,7 @@ class MainActivity : AppCompatActivity(){
 
         //Handling input[type="file"] requests for android API 16+
         fun openFileChooser(uploadMsg: ValueCallback<Uri>, acceptType: String, capture: String) {
-           // handler.sendEmptyMessage(MSG_CLICK_ON_URL)
+            // handler.sendEmptyMessage(MSG_CLICK_ON_URL)
             if (!fileChooserEnabled) {
                 uploadMsg.onReceiveValue(null)
                 return
@@ -168,7 +200,11 @@ class MainActivity : AppCompatActivity(){
         }
 
         //Handling input[type="file"] requests for android API 21+
-        override fun onShowFileChooser(webView: WebView, filePathCallback: ValueCallback<Array<Uri>>, fileChooserParams: FileChooserParams): Boolean {
+        override fun onShowFileChooser(
+            webView: WebView,
+            filePathCallback: ValueCallback<Array<Uri>>,
+            fileChooserParams: FileChooserParams
+        ): Boolean {
             if (!fileChooserEnabled) {
                 filePathCallback.onReceiveValue(null)
                 return true
@@ -177,10 +213,12 @@ class MainActivity : AppCompatActivity(){
             filePickerFilePath = filePathCallback
 
             //Checking permission for storage and camera for writing and uploading images
-            val perms = arrayOf(/*Manifest.permission.WRITE_EXTERNAL_STORAGE,*/ Manifest.permission.CAMERA)
-            PermissionHelper.CheckPermissions(this@MainActivity, object : PermissionHelper.CheckPermissionListener {
+            PermissionHelper.CheckPermissions(
+                this@MainActivity,
+                object : PermissionHelper.CheckPermissionListener {
                     override fun onAllGranted(sync: Boolean) {
-                        val takePictureIntent: Intent = createCameraCaptureIntent(fileChooserParams.acceptTypes)!!
+                        val takePictureIntent: Intent =
+                            createCameraCaptureIntent(fileChooserParams.acceptTypes)!!
                         if (fileChooserParams.isCaptureEnabled && fileChooserParams.mode == FileChooserParams.MODE_OPEN) {
                             // capture="camera" and without multiple
                             startActivityForResult(takePictureIntent, FILE_PICKER_REQ_CODE)
@@ -193,13 +231,11 @@ class MainActivity : AppCompatActivity(){
                             Intent.EXTRA_MIME_TYPES,
                             fileChooserParams.acceptTypes
                         )
-                        val intentArray: Array<Intent?> = arrayOf(takePictureIntent) ?: arrayOfNulls(0)
+                        val intentArray: Array<Intent?> =
+                            arrayOf(takePictureIntent) ?: arrayOfNulls(0)
                         val chooserIntent = Intent(Intent.ACTION_CHOOSER)
                         chooserIntent.putExtra(Intent.EXTRA_INTENT, contentSelectionIntent)
-                        chooserIntent.putExtra(
-                            Intent.EXTRA_TITLE,
-                           "File Chooser"
-                        )
+                        chooserIntent.putExtra(Intent.EXTRA_TITLE, "File Chooser")
                         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentArray)
                         startActivityForResult(chooserIntent, FILE_PICKER_REQ_CODE)
                     }
@@ -210,7 +246,9 @@ class MainActivity : AppCompatActivity(){
                             filePickerFilePath = null
                         }
                     }
-                }, *perms)
+                },
+                *storagePermissions()
+            )
             return true
         }
     }
@@ -239,13 +277,15 @@ class MainActivity : AppCompatActivity(){
         filePickerFilePath = null
     }
 
+
     private fun createCameraCaptureIntent(mimeTypes: Array<String>?): Intent? {
         var isVideo = false
         if (mimeTypes != null && mimeTypes.size == 1 && mimeTypes[0].startsWith("video")) {
             isVideo = true
         }
 
-        var takePictureIntent: Intent? = Intent(if (isVideo) MediaStore.ACTION_VIDEO_CAPTURE else MediaStore.ACTION_IMAGE_CAPTURE)
+        var takePictureIntent: Intent? =
+            Intent(if (isVideo) MediaStore.ACTION_VIDEO_CAPTURE else MediaStore.ACTION_IMAGE_CAPTURE)
 
         if (takePictureIntent!!.resolveActivity(this@MainActivity.packageManager) != null) {
             var imageVideoFile: File? = null
@@ -256,7 +296,8 @@ class MainActivity : AppCompatActivity(){
             }
             if (imageVideoFile != null) {
                 filePickerCamMessage = "file:" + imageVideoFile.absolutePath
-                val photoUri = FileProvider.getUriForFile(this, "$packageName.file_provider", imageVideoFile)
+                val photoUri =
+                    FileProvider.getUriForFile(this, "$packageName.file_provider", imageVideoFile)
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
             } else {
                 takePictureIntent = null
@@ -270,11 +311,10 @@ class MainActivity : AppCompatActivity(){
         @SuppressLint("SimpleDateFormat")
         val file_name = SimpleDateFormat("yyyy_mm_ss").format(Date())
         val new_name = "file_" + file_name + "_"
-        val sd_directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val sd_directory =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         return File.createTempFile(new_name, if (isVideo) ".mp4" else ".jpg", sd_directory)
     }
-
-
 
 
     fun parsePermission(resource: Array<String>): Array<String?> {
@@ -294,6 +334,27 @@ class MainActivity : AppCompatActivity(){
         return result
     }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_BACK -> {
+                    if (binding.webview.canGoBack()) {
+                        binding.webview.goBack()
+                    } else {
+                        if (doubleBackToExitPressedOnce) {
+                            super.onBackPressed()
+                        }
+                        this.doubleBackToExitPressedOnce = true
+                        Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show()
+                        Handler(Looper.getMainLooper()).postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
+                    }
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
 
     override fun onResume() {
         super.onResume()
@@ -302,7 +363,7 @@ class MainActivity : AppCompatActivity(){
         }
     }
 
-     override fun onDestroy() {
+    override fun onDestroy() {
         binding.webview.clearCache(true)
         binding.webview.destroy()
         super.onDestroy()
