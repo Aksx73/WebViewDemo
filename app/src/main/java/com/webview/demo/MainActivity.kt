@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.*
 import android.os.*
 import android.provider.MediaStore
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.*
@@ -34,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         const val URL_RWB =
             "https://g05f99af21721c3-bjsdev.adb.ap-mumbai-1.oraclecloudapps.com/ords/r/prachar/mission-100"
         const val FILE_PICKER_REQ_CODE = 19
+        const val VIDEO_DURATION = 30
     }
 
     private var webViewAudioEnabled = true
@@ -73,6 +75,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initWebView()
+
     }
 
     private fun initWebView() {
@@ -280,12 +283,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun createCameraCaptureIntent(mimeTypes: Array<String>?): Intent? {
         var isVideo = false
-        if (mimeTypes != null && mimeTypes.size == 1 && mimeTypes[0].startsWith("video")) {
+        if (mimeTypes != null && mimeTypes.isNotEmpty() && mimeTypes[0].startsWith("video")) {
             isVideo = true
         }
 
         var takePictureIntent: Intent? =
             Intent(if (isVideo) MediaStore.ACTION_VIDEO_CAPTURE else MediaStore.ACTION_IMAGE_CAPTURE)
+
+        if (isVideo) takePictureIntent?.putExtra(MediaStore.EXTRA_DURATION_LIMIT, VIDEO_DURATION);
 
         if (takePictureIntent!!.resolveActivity(this@MainActivity.packageManager) != null) {
             var imageVideoFile: File? = null
@@ -296,8 +301,7 @@ class MainActivity : AppCompatActivity() {
             }
             if (imageVideoFile != null) {
                 filePickerCamMessage = "file:" + imageVideoFile.absolutePath
-                val photoUri =
-                    FileProvider.getUriForFile(this, "$packageName.file_provider", imageVideoFile)
+                val photoUri = FileProvider.getUriForFile(this, "$packageName.file_provider", imageVideoFile)
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
             } else {
                 takePictureIntent = null
@@ -364,9 +368,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        binding.webview.clearCache(true)
-        binding.webview.destroy()
+       // binding.webview.clearCache(true)
+       // binding.webview.destroy()
         super.onDestroy()
+
+        //todo clear media created cache
     }
 
 }
